@@ -3,6 +3,9 @@ import * as ReactDOM from 'react-dom';
 import {App} from './app';
 import './util/i18n';
 
+// Initialize Sherlock integration (postMessage bridge, event emitters)
+import './sherlock';
+
 ReactDOM.render(
 	<React.StrictMode>
 		<App />

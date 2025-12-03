@@ -9,6 +9,7 @@ import {
 } from './stories.types';
 import {useStoryFormatsContext} from '../story-formats';
 import {useStoreErrorReporter} from '../use-store-error-reporter';
+import {emitStateChangeEvent} from '../../sherlock/state-integration';
 
 export const StoriesContext = React.createContext<StoriesContextProps>({
 	dispatch: () => {},
@@ -34,6 +35,13 @@ export const StoriesContextProvider: React.FC = props => {
 				storiesPersistence.saveMiddleware(newState, action, formats);
 			} catch (error) {
 				reportError(error as Error, 'store.errors.cantPersistStories');
+			}
+
+			// Emit Sherlock events for state changes (only when embedded)
+			try {
+				emitStateChangeEvent(action, state, newState);
+			} catch (error) {
+				console.error('[Sherlock] Error emitting state change event:', error);
 			}
 
 			return newState;
