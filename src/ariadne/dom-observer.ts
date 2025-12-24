@@ -1,12 +1,12 @@
 /**
- * Sherlock DOM Observer
+ * Ariadne DOM Observer
  *
  * Uses MutationObserver to track DOM changes during story playtest.
  * This captures dynamic content updates from story formats like Harlowe,
  * SugarCube, etc.
  */
 
-import { emitEvent, isBridgeActive, sendToParent, SherlockEventData } from './post-message-bridge';
+import { emitEvent, isBridgeActive, sendToParent, AriadneEventData } from './post-message-bridge';
 
 // Observer instance
 let observer: MutationObserver | null = null;
@@ -56,7 +56,7 @@ function getElementSelector(element: Element): string {
 /**
  * Determine mutation type based on changes
  */
-function getMutationType(mutation: MutationRecord): SherlockEventData['metadata']['mutationType'] {
+function getMutationType(mutation: MutationRecord): 'replace' | 'append' | 'prepend' | 'remove' {
   if (mutation.type === 'childList') {
     if (mutation.removedNodes.length > 0 && mutation.addedNodes.length === 0) {
       return 'remove';
@@ -128,7 +128,7 @@ function processMutations(): void {
                         passageElement?.getAttribute('name') ||
                         undefined;
 
-    const event: SherlockEventData = {
+    const event: AriadneEventData = {
       type: 'DOM_MUTATION',
       timestamp: new Date().toISOString(),
       passageTitle,
@@ -140,7 +140,7 @@ function processMutations(): void {
       }
     };
 
-    console.log('[Sherlock DOM] Mutation detected:', event.metadata?.elementSelector, mutationType);
+    console.log('[Ariadne DOM] Mutation detected:', event.metadata?.elementSelector, mutationType);
     emitEvent(event);
   }
 
@@ -181,18 +181,18 @@ function findStoryContainer(): Element | null {
  */
 export function startDOMObserver(container?: Element): void {
   if (isObserving) {
-    console.log('[Sherlock DOM] Already observing');
+    console.log('[Ariadne DOM] Already observing');
     return;
   }
 
   if (!isBridgeActive()) {
-    console.log('[Sherlock DOM] Bridge not active, skipping DOM observer');
+    console.log('[Ariadne DOM] Bridge not active, skipping DOM observer');
     return;
   }
 
   const targetContainer = container || findStoryContainer();
   if (!targetContainer) {
-    console.warn('[Sherlock DOM] No story container found');
+    console.warn('[Ariadne DOM] No story container found');
     return;
   }
 
@@ -207,7 +207,7 @@ export function startDOMObserver(container?: Element): void {
   });
 
   isObserving = true;
-  console.log('[Sherlock DOM] Started observing:', getElementSelector(targetContainer));
+  console.log('[Ariadne DOM] Started observing:', getElementSelector(targetContainer));
 
   // Notify parent that observation started
   sendToParent({
@@ -242,7 +242,7 @@ export function stopDOMObserver(): void {
   isObserving = false;
   mutationBuffer = [];
 
-  console.log('[Sherlock DOM] Stopped observing');
+  console.log('[Ariadne DOM] Stopped observing');
 
   // Notify parent that observation stopped
   if (isBridgeActive()) {
@@ -275,7 +275,7 @@ export function captureContentSnapshot(passageTitle?: string): void {
   const container = findStoryContainer();
   if (!container) return;
 
-  const event: SherlockEventData = {
+  const event: AriadneEventData = {
     type: 'DOM_MUTATION',
     timestamp: new Date().toISOString(),
     passageTitle,

@@ -3,8 +3,8 @@ import * as ReactDOM from 'react-dom';
 import {App} from './app';
 import './util/i18n';
 
-// Initialize Sherlock integration (postMessage bridge, event emitters)
-import './sherlock';
+// Initialize Ariadne integration (postMessage bridge, event emitters)
+import './ariadne';
 
 ReactDOM.render(
 	<React.StrictMode>

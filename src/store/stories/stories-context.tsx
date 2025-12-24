@@ -9,7 +9,7 @@ import {
 } from './stories.types';
 import {useStoryFormatsContext} from '../story-formats';
 import {useStoreErrorReporter} from '../use-store-error-reporter';
-import {emitStateChangeEvent} from '../../sherlock/state-integration';
+import {emitStateChangeEvent} from '../../ariadne/state-integration';
 
 export const StoriesContext = React.createContext<StoriesContextProps>({
 	dispatch: () => {},
@@ -37,11 +37,11 @@ export const StoriesContextProvider: React.FC = props => {
 				reportError(error as Error, 'store.errors.cantPersistStories');
 			}
 
-			// Emit Sherlock events for state changes (only when embedded)
+			// Emit Ariadne events for state changes (only when embedded)
 			try {
 				emitStateChangeEvent(action, state, newState);
 			} catch (error) {
-				console.error('[Sherlock] Error emitting state change event:', error);
+				console.error('[Ariadne] Error emitting state change event:', error);
 			}
 
 			return newState;

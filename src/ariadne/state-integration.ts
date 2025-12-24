@@ -1,11 +1,11 @@
 /**
- * Sherlock State Integration
+ * Ariadne State Integration
  *
  * Hooks into Twine's Redux-like state management to emit events
  * when stories and passages are modified.
  */
 
-import { emitEvent, isBridgeActive, SherlockEventData } from './post-message-bridge';
+import { emitEvent, isBridgeActive, AriadneEventData } from './post-message-bridge';
 import {
   StoriesAction,
   StoriesState,
@@ -14,9 +14,9 @@ import {
 } from '../store/stories/stories.types';
 
 /**
- * Map Twine action types to Sherlock event types
+ * Map Twine action types to Ariadne event types
  */
-function mapActionToEventType(actionType: string): SherlockEventData['type'] | null {
+function mapActionToEventType(actionType: string): AriadneEventData['type'] | null {
   switch (actionType) {
     case 'createStory':
     case 'updateStory':
@@ -54,8 +54,8 @@ function createEventMetadata(
   action: StoriesAction,
   prevState: StoriesState,
   newState: StoriesState
-): SherlockEventData['metadata'] {
-  const metadata: SherlockEventData['metadata'] = {};
+): NonNullable<AriadneEventData['metadata']> {
+  const metadata: NonNullable<AriadneEventData['metadata']> = {};
 
   switch (action.type) {
     case 'createStory': {
@@ -177,7 +177,7 @@ function getStoryData(state: StoriesState, action: StoriesAction): Story | undef
 }
 
 /**
- * Emit a Sherlock event for a state change
+ * Emit a Ariadne event for a state change
  */
 export function emitStateChangeEvent(
   action: StoriesAction,
@@ -197,7 +197,7 @@ export function emitStateChangeEvent(
   const metadata = createEventMetadata(action, prevState, newState);
   const story = getStoryData(newState, action);
 
-  const event: SherlockEventData = {
+  const event: AriadneEventData = {
     type: eventType,
     timestamp: new Date().toISOString(),
     passageTitle: metadata.passageName,
@@ -205,14 +205,14 @@ export function emitStateChangeEvent(
     metadata
   };
 
-  console.log('[Sherlock State] Emitting event:', event.type, metadata.action);
+  console.log('[Ariadne State] Emitting event:', event.type, metadata.action);
   emitEvent(event);
 }
 
 /**
  * Create a middleware that wraps the reducer to emit events
  */
-export function createSherlockMiddleware<S extends StoriesState, A extends StoriesAction>(
+export function createAriadneMiddleware<S extends StoriesState, A extends StoriesAction>(
   reducer: (state: S, action: A) => S
 ): (state: S, action: A) => S {
   return (state: S, action: A): S => {
@@ -222,7 +222,7 @@ export function createSherlockMiddleware<S extends StoriesState, A extends Stori
     try {
       emitStateChangeEvent(action, state, newState);
     } catch (error) {
-      console.error('[Sherlock State] Error emitting event:', error);
+      console.error('[Ariadne State] Error emitting event:', error);
     }
 
     return newState;

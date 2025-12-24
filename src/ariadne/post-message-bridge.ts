@@ -1,12 +1,12 @@
 /**
- * Sherlock PostMessage Bridge for Twine
+ * Ariadne PostMessage Bridge for Twine
  *
  * Enables bidirectional communication between Twine (running in iframe)
- * and the parent Sherlock application via postMessage.
+ * and the parent Ariadne application via postMessage.
  */
 
-// Event types matching Sherlock's TwineEventType
-export type SherlockEventType =
+// Event types matching Ariadne's TwineEventType
+export type AriadneEventType =
   | 'SESSION_START'
   | 'SESSION_END'
   | 'NAVIGATE'
@@ -49,8 +49,8 @@ export interface TwineOutgoingMessage {
 }
 
 // Event data structure
-export interface SherlockEventData {
-  type: SherlockEventType;
+export interface AriadneEventData {
+  type: AriadneEventType;
   timestamp: string;
   passageTitle?: string;
   content?: string;
@@ -120,14 +120,14 @@ export function sendToParent(message: TwineOutgoingMessage): void {
   try {
     window.parent.postMessage(message, '*');
   } catch (error) {
-    console.error('[Sherlock Bridge] Failed to send message to parent:', error);
+    console.error('[Ariadne Bridge] Failed to send message to parent:', error);
   }
 }
 
 /**
  * Send event to parent (convenience wrapper)
  */
-export function emitEvent(event: SherlockEventData): void {
+export function emitEvent(event: AriadneEventData): void {
   sendToParent({
     type: 'twine:event',
     payload: event
@@ -146,7 +146,7 @@ export function onMessage(messageType: string, handler: MessageHandler): void {
  */
 function handleMessage(event: MessageEvent): void {
   if (!isOriginAllowed(event.origin)) {
-    console.warn('[Sherlock Bridge] Rejected message from unauthorized origin:', event.origin);
+    console.warn('[Ariadne Bridge] Rejected message from unauthorized origin:', event.origin);
     return;
   }
 
@@ -154,14 +154,14 @@ function handleMessage(event: MessageEvent): void {
   if (!message || typeof message.type !== 'string') return;
   if (!message.type.startsWith('twine:')) return;
 
-  console.log('[Sherlock Bridge] Received message:', message.type);
+  console.log('[Ariadne Bridge] Received message:', message.type);
 
   const handler = messageHandlers.get(message.type);
   if (handler) {
     try {
       handler(message.payload);
     } catch (error) {
-      console.error('[Sherlock Bridge] Error handling message:', error);
+      console.error('[Ariadne Bridge] Error handling message:', error);
       sendToParent({
         type: 'twine:error',
         payload: {
@@ -171,7 +171,7 @@ function handleMessage(event: MessageEvent): void {
       });
     }
   } else {
-    console.warn('[Sherlock Bridge] No handler for message type:', message.type);
+    console.warn('[Ariadne Bridge] No handler for message type:', message.type);
   }
 }
 
@@ -184,11 +184,11 @@ export function initBridge(): void {
   isEmbedded = checkEmbedded();
 
   if (!isEmbedded) {
-    console.log('[Sherlock Bridge] Not running in iframe, bridge disabled');
+    console.log('[Ariadne Bridge] Not running in iframe, bridge disabled');
     return;
   }
 
-  console.log('[Sherlock Bridge] Initializing postMessage bridge');
+  console.log('[Ariadne Bridge] Initializing postMessage bridge');
 
   // Listen for messages from parent
   window.addEventListener('message', handleMessage);
@@ -211,7 +211,7 @@ export function initBridge(): void {
   });
 
   isInitialized = true;
-  console.log('[Sherlock Bridge] Bridge initialized');
+  console.log('[Ariadne Bridge] Bridge initialized');
 }
 
 /**
@@ -231,5 +231,5 @@ export function destroyBridge(): void {
   messageHandlers.clear();
   isInitialized = false;
 
-  console.log('[Sherlock Bridge] Bridge destroyed');
+  console.log('[Ariadne Bridge] Bridge destroyed');
 }
