@@ -5,7 +5,7 @@
  * when stories and passages are modified.
  */
 
-import { emitEvent, isBridgeActive, AriadneEventData } from './post-message-bridge';
+import { emitEvent, sendToParent, isBridgeActive, AriadneEventData } from './post-message-bridge';
 import {
   StoriesAction,
   StoriesState,
@@ -154,6 +154,45 @@ function createEventMetadata(
 }
 
 /**
+ * Convert a Twine internal Story to the Ariadne TwineStory format
+ * expected by the parent TwineIframeEditor.
+ *
+ * Twine uses left/top for position and stores startPassage as a passage ID.
+ * Ariadne uses position: {x, y} and startPassage as a passage name.
+ */
+function convertToAriadneStory(story: Story): {
+  name: string;
+  startPassage: string;
+  storyFormat: string;
+  storyFormatVersion: string;
+  passages: Array<{
+    id: string;
+    name: string;
+    text: string;
+    tags: string[];
+    position: { x: number; y: number };
+  }>;
+} {
+  // Resolve startPassage ID to passage name
+  const startPassage = story.passages.find(p => p.id === story.startPassage);
+  const startPassageName = startPassage?.name || 'Start';
+
+  return {
+    name: story.name,
+    startPassage: startPassageName,
+    storyFormat: story.storyFormat,
+    storyFormatVersion: story.storyFormatVersion,
+    passages: story.passages.map(p => ({
+      id: p.id,
+      name: p.name,
+      text: p.text,
+      tags: p.tags || [],
+      position: { x: p.left, y: p.top },
+    })),
+  };
+}
+
+/**
  * Get full story data for the event
  */
 function getStoryData(state: StoriesState, action: StoriesAction): Story | undefined {
@@ -207,6 +246,15 @@ export function emitStateChangeEvent(
 
   console.log('[Ariadne State] Emitting event:', event.type, metadata.action);
   emitEvent(event);
+
+  // Also send the full story as twine:story-changed so the parent
+  // can trigger autosave via TwineIframeEditor.onStoryChange
+  if (story) {
+    sendToParent({
+      type: 'twine:story-changed',
+      payload: convertToAriadneStory(story),
+    });
+  }
 }
 
 /**
